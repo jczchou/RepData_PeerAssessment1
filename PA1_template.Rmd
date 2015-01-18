@@ -1,25 +1,29 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "PROJECT 1"
+output: html_document
 ---
 
+January 2015
 
-## Loading and preprocessing the data
+Jay Chou:
 
+```{r cache=TRUE}
+library(ggplot2)
+library(sqldf)
 
+setwd("~/Colo_St/Johns Hopkins/Reproducible_Research/Project_1")
+steps_log <- read.csv("activity.csv", fill = TRUE) # 1 column
+steps_log_wo_NA <- na.omit(steps_log)
+step_per_day <- sqldf('select distinct date, count(date) as num_interval, sum("steps") as steps from steps_log_wo_NA group by date')
+barplot(step_per_day$steps, names.arg=step_per_day$date, ylab="Sum of Steps", xlab="Date")
 
-## What is mean total number of steps taken per day?
+#mean and median steps per day
+mean_steps <- mean(step_per_day$steps)
+mean_steps
+median_steps <- median(step_per_day$steps)
+median_steps
 
-
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+step_per_interval_avg <- sqldf('select distinct interval, avg("steps") as avg_steps from steps_log group by interval')
+ggplot(step_per_interval_avg, aes(x=interval, y=avg_steps)) + geom_line() + geom_point()
+print("interval 835, or 8:35AM, appears to be the peak interval with 206 steps taken ")
+```
