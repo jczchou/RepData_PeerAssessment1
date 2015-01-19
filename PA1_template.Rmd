@@ -7,14 +7,19 @@ January 2015
 
 Jay Chou:
 
-```{r cache=TRUE}
+```{r cache=TRUE, echo=TRUE}
 library(ggplot2)
 library(sqldf)
 
 setwd("~/Colo_St/Johns Hopkins/Reproducible_Research/Project_1")
+# read in the file
 steps_log <- read.csv("activity.csv", fill = TRUE) # 1 column
+
+# omit NAs
 steps_log_wo_NA <- na.omit(steps_log)
+# get the total steps by date
 step_per_day <- sqldf('select distinct date, count(date) as num_interval, sum("steps") as steps from steps_log_wo_NA group by date')
+# plot total steps by date
 barplot(step_per_day$steps, names.arg=step_per_day$date, ylab="Sum of Steps", xlab="Date")
 
 #mean and median steps per day
@@ -23,7 +28,32 @@ mean_steps
 median_steps <- median(step_per_day$steps)
 median_steps
 
-step_per_interval_avg <- sqldf('select distinct interval, avg("steps") as avg_steps from steps_log group by interval')
+# avg steps per interval
+step_per_interval_avg <- sqldf('select distinct interval, avg("steps") as avg_steps from steps_log_wo_NA group by interval')
+# plot avg steps per interval
 ggplot(step_per_interval_avg, aes(x=interval, y=avg_steps)) + geom_line() + geom_point()
-print("interval 835, or 8:35AM, appears to be the peak interval with 206 steps taken ")
+print("interval 835, appears to be the peak interval with 206 steps taken ")
+
+# how many rows/records are NA
+rows_of_NA <- sqldf('select count(interval) as NA_rows from steps_log where steps is NULL')
+
+rows_of_NA
+
+# now make a new copy of activity.csv but fill in NAs with the avg steps for that interval
+steps_log_filled_NA <- steps_log
+# change NA to 0 for steps
+steps_log_filled_NA <- sqldf(c("update steps_log_filled_NA set steps = 0 where steps is NULL", "select * from main.steps_log_filled_NA"))
+
+step_per_day_filled_NA <- sqldf('select distinct date, count(date) as num_interval, sum("steps") as steps from steps_log_filled_NA group by date')
+# plot total steps by date
+barplot(step_per_day_filled_NA$steps, names.arg=step_per_day_filled_NA$date, ylab="Sum of Steps", xlab="Date")
+
+#mean and median steps per day for new NA-filled-in dataset
+mean_steps_filled_NA <- mean(step_per_day_filled_NA$steps)
+mean_steps_filled_NA
+median_steps_filled_NA <- median(step_per_day_filled_NA$steps)
+median_steps_filled_NA
+
+print("filling NA with 0 leads to a lower mean and median")
+
 ```
